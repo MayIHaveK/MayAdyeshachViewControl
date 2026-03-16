@@ -1,5 +1,6 @@
 package com.mayihavek.mayadyeshachviewcontrol.manager
 
+import com.mayihavek.mayadyeshachviewcontrol.config.ConfigManager
 import com.mayihavek.mayadyeshachviewcontrol.storage.VisibilityRepository
 import taboolib.common.platform.function.info
 import java.util.concurrent.ConcurrentHashMap
@@ -73,6 +74,18 @@ object NpcVisibilityManager {
     }
 
     /**
+     * 批量设置组内所有 NPC 的可见性
+     * @return 设置的 NPC 数量
+     */
+    fun setGroupVisibility(groupName: String, playerName: String, visible: Boolean): Int {
+        val npcs = ConfigManager.getGroupNpcs(groupName)
+        npcs.forEach { npcId ->
+            setVisibility(npcId, playerName, visible)
+        }
+        return npcs.size
+    }
+
+    /**
      * 获取某 NPC 下所有玩家的可见性设置。
      */
     fun getPlayersForNpc(npcId: String): Map<String, Boolean> {
@@ -93,5 +106,12 @@ object NpcVisibilityManager {
         return cache.mapNotNull { (npcId, players) ->
             players[playerName]?.let { npcId to it }
         }.toMap()
+    }
+
+    /**
+     * 判断 NPC 是否在自动隐藏列表中
+     */
+    fun isAutoHideNpc(npcId: String): Boolean {
+        return ConfigManager.isAutoHideNpc(npcId)
     }
 }

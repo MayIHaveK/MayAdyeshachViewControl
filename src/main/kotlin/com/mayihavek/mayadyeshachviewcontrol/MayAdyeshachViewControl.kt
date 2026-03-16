@@ -1,12 +1,12 @@
 package com.mayihavek.mayadyeshachviewcontrol
 
+import com.mayihavek.mayadyeshachviewcontrol.config.ConfigManager
 import com.mayihavek.mayadyeshachviewcontrol.manager.NpcVisibilityManager
 import com.mayihavek.mayadyeshachviewcontrol.storage.SqliteVisibilityRepository
 import com.mayihavek.mayadyeshachviewcontrol.utils.ConsoleBanner
 import ink.ptms.adyeshach.core.Adyeshach
 import ink.ptms.adyeshach.core.AdyeshachAPI
 import taboolib.common.platform.Plugin
-import taboolib.common.platform.function.info
 import taboolib.common.platform.function.pluginId
 import taboolib.common.platform.function.pluginVersion
 import java.io.File
@@ -38,6 +38,10 @@ object MayAdyeshachViewControl : Plugin() {
             false
         }
 
+        // 获取配置信息
+        val autoHideCount = ConfigManager.autoHideNpcs.size
+        val groupCount = ConfigManager.groupNames.size
+
         // 打印启动横幅
         ConsoleBanner.print {
             asciiText = "MAVC"
@@ -47,6 +51,8 @@ object MayAdyeshachViewControl : Plugin() {
 
             info("Adyeshach", if (adyConnected) "Connected" else "Not Found")
             info("Database", "SQLite Ready")
+            info("Auto-Hide", "$autoHideCount NPCs")
+            info("Groups", "$groupCount defined")
             info("Command", "/madvc help")
         }
     }
