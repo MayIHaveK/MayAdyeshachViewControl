@@ -1,6 +1,7 @@
 package com.mayihavek.mayadyeshachviewcontrol
 
 import com.mayihavek.mayadyeshachviewcontrol.config.ConfigManager
+import com.mayihavek.mayadyeshachviewcontrol.interact.InteractSystem
 import com.mayihavek.mayadyeshachviewcontrol.manager.NpcVisibilityManager
 import com.mayihavek.mayadyeshachviewcontrol.storage.SqliteVisibilityRepository
 import com.mayihavek.mayadyeshachviewcontrol.utils.ConsoleBanner
@@ -42,6 +43,15 @@ object MayAdyeshachViewControl : Plugin() {
         val autoHideCount = ConfigManager.autoHideNpcs.size
         val groupCount = ConfigManager.groupNames.size
 
+        // 启动交互 HUD（需要 ArcartX）
+        val interactEnabled = try {
+            if (ConfigManager.interactEnabled) {
+                saveDefaultResource("Hud.yml")
+                InteractSystem.start()
+                true
+            } else false
+        } catch (_: Exception) { false }
+
         // 打印启动横幅
         ConsoleBanner.print {
             asciiText = "MAVC"
@@ -53,13 +63,25 @@ object MayAdyeshachViewControl : Plugin() {
             info("Database", "SQLite Ready")
             info("Auto-Hide", "$autoHideCount NPCs")
             info("Groups", "$groupCount defined")
+            info("Interact HUD", if (interactEnabled) "Enabled" else "Disabled")
             info("Command", "/madvc help")
         }
     }
 
     override fun onDisable() {
+        InteractSystem.stop()
         NpcVisibilityManager.close()
         visibilityRepository?.close()
         visibilityRepository = null
+    }
+
+    private fun saveDefaultResource(name: String) {
+        val file = File(dataFolder, name)
+        if (!file.exists()) {
+            dataFolder.mkdirs()
+            javaClass.classLoader?.getResourceAsStream(name)?.use { input ->
+                file.outputStream().use { output -> input.copyTo(output) }
+            }
+        }
     }
 }

@@ -25,6 +25,7 @@ taboolib {
         }
         dependencies{
             name("Adyeshach")
+            name("ArcartX").optional(true)
         }
     }
     version { taboolib = "6.2.4-99fb800" }

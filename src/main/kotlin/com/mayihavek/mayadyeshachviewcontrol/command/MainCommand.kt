@@ -1,6 +1,7 @@
 package com.mayihavek.mayadyeshachviewcontrol.command
 
 import com.mayihavek.mayadyeshachviewcontrol.config.ConfigManager
+import com.mayihavek.mayadyeshachviewcontrol.interact.InteractSystem
 import com.mayihavek.mayadyeshachviewcontrol.manager.AdyService.allEntityIds
 import com.mayihavek.mayadyeshachviewcontrol.manager.AdyService.getAdyEntities
 import com.mayihavek.mayadyeshachviewcontrol.manager.NpcVisibilityManager
@@ -103,7 +104,24 @@ object MainCommand {
     val reload = subCommand {
         execute<ProxyCommandSender> { sender, _, _ ->
             ConfigManager.reload()
+            if (ConfigManager.interactEnabled) {
+                InteractSystem.reload()
+            } else {
+                InteractSystem.stop()
+            }
             sender.sendMessage("&a[MayAdyeshachViewControl] &7配置文件已重载。".colored())
+        }
+    }
+
+    @CommandBody
+    val open = subCommand {
+        execute<ProxyCommandSender> { sender, _, _ ->
+            val player = Bukkit.getPlayerExact(sender.name)
+            if (player == null) {
+                sender.sendMessage("&c[MayAdyeshachViewControl] &7该命令只能由玩家执行。".colored())
+                return@execute
+            }
+            InteractSystem.open(player)
         }
     }
 
@@ -152,7 +170,8 @@ object MainCommand {
                 &f/madvc set <player> <entity> <true/false> &8- &7设置指定玩家是否能看到该实体
                 &f/madvc group <player> <group> <true/false> &8- &7批量设置组内实体可见性
                 &f/madvc fix <player> &8- &7对指定玩家执行一次修复并应用可见性
-                &f/madvc reload &8- &7重载配置文件
+                &f/madvc open &8- &7打开交互 HUD（需启用 interact）
+                &f/madvc reload &8- &7重载配置文件和 HUD 材质
                 &r
             """.trimIndent().colored())
         }

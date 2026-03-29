@@ -1,0 +1,160 @@
+ui:
+  isHud: true
+  defaultOpen: false
+  screenScale: true
+  packetHandler:
+    InteractHudPacket: |-
+      val.list.clear()
+      var.count = packet.size()
+      if(var.current >= var.count){
+        var.current = var.count - 1
+      }
+      if(var.current < 0){
+        var.current = 0
+      }
+
+      for(i in range(0, packet.size() - 1)){
+        entity = packet[i]
+        comp = val.list.create('tpl', entity['id'])
+        comp.visible = true
+        comp.data = entity
+        comp['name'].texts = '&f' + entity['name']
+      }
+  action:
+    open: |-
+      var.count = 0
+      var.current = 0
+    tick: |-
+      if(var.count > 0){
+        children = val.list.getVisibleChildren()
+        for(i in range(0, children.size() - 1)){
+          child = children[i]
+          if(i == var.current){
+            child.normal = '40,140,220,120'
+            child['bar'].alpha = 1
+          }
+          if(i != var.current){
+            child.normal = '0,0,0,80'
+            child['bar'].alpha = 0
+          }
+        }
+      }
+    keyPress: |-
+      keyPress = self.currentKeyPress
+
+      if(keyPress == "UP"){
+        if(var.count > 0 && var.current > 0){
+          var.current = var.current - 1
+        }
+      }
+
+      if(keyPress == "DOWN"){
+        if(var.count > 0 && var.current < var.count - 1){
+          var.current = var.current + 1
+        }
+      }
+
+      if(keyPress == "F"){
+        if(var.count > 0){
+          children = val.list.getVisibleChildren()
+          if(var.current < children.size()){
+            entity = children[var.current].data
+            Packet.send('InteractEntityHud', 'select', entity['type'], entity['id'])
+          }
+        }
+      }
+
+controls:
+  adaptive:
+    type: adaptive
+    attribute:
+      point: ~top_left
+      width: 1920
+      height: 1080
+    children:
+      container:
+        type: Canvas
+        attribute:
+          point: ~middle_center
+          width: 300
+          height: 500
+          x: 240
+        children:
+          header:
+            type: Canvas
+            attribute:
+              width: 260
+              x: 20
+              height: 30
+              visible: "var.count > 0"
+            children:
+              headerIcon:
+                type: texture
+                attribute:
+                  y: 2
+                  width: 22
+                  height: 22
+                  normal: ~interact/消息.png
+              headerText:
+                type: text
+                attribute:
+                  texts: ~&f交互
+                  fontSize: 20
+                  x: 28
+                  y: 4
+                  shadow: true
+              headerLine:
+                type: texture
+                attribute:
+                  y: 26
+                  width: 260
+                  height: 1
+                  normal: ~255,255,255,40
+
+          list:
+            val: list
+            type: vStack
+            attribute:
+              x: 20
+              y: 36
+              spaceBetween: 3
+
+template:
+  tpl:
+    type: texture
+    attribute:
+      normal: ~0,0,0,80
+      width: 260
+      height: 34
+      visible: false
+      radius: 4
+      shape: ~ROUNDED_RECT
+      data:
+    children:
+      bar:
+        type: texture
+        attribute:
+          y: 4
+          width: 3
+          height: 26
+          normal: ~80,180,255,255
+          alpha: 0
+          radius: 2
+          shape: ~ROUNDED_RECT
+      name:
+        type: text
+        attribute:
+          texts: ~&f
+          fontSize: 22
+          x: 12
+          y: 8
+          shadow: true
+      hint:
+        type: text
+        attribute:
+          texts: ~&7[F]
+          fontSize: 16
+          x: 232
+          y: 10
+          alpha: 0.4
+          shadow: true
