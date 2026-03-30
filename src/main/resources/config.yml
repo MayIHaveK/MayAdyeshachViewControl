@@ -53,7 +53,7 @@ interact:
 
   # Bukkit 原生实体名称匹配列表
   # 只有 customName 或 name 在此列表中的实体才会显示
-  # 留空 = 显示距离内所有非排除类型的实体
+  # 留空 = 不显示任何 Bukkit 原生实体
   match-names: []
     # - "商店老板"
     # - "铁匠"

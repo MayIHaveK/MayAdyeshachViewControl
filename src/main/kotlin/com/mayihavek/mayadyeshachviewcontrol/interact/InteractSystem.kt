@@ -309,7 +309,8 @@ object InteractSystem {
                 .filter { e ->
                     e.type !in EXCLUDED_TYPES
                             && loc.distanceSquared(e.location) <= distSq
-                            && (matchNameSet.isEmpty() || (e.customName in matchNameSet) || (e.name in matchNameSet))
+                            && matchNameSet.isNotEmpty()
+                            && ((e.customName in matchNameSet) || (e.name in matchNameSet))
                 }
                 .map { e ->
                     val rawName = e.customName ?: e.name
