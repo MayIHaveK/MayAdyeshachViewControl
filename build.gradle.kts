@@ -47,16 +47,30 @@ dependencies {
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("libs"))
 
-    // JFiglet - 使用 taboo() 打包并重定向
+    // JFiglet - 体积很小，直接内嵌
     taboo("com.github.lalyos:jfiglet:0.0.9")
 
-    // Exposed ORM 框架 - 使用 taboo() 打包并重定向
-    taboo("org.jetbrains.exposed:exposed-core:$exposedVersion")
-    taboo("org.jetbrains.exposed:exposed-dao:$exposedVersion")
-    taboo("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    // Exposed ORM 框架
+    // 只内嵌 Exposed 本体，排除它传递带入的大型 Kotlin 运行库链
+    taboo("org.jetbrains.exposed:exposed-core:$exposedVersion") {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+    taboo("org.jetbrains.exposed:exposed-jdbc:$exposedVersion") {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-reflect")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
 
-    // SQLite JDBC 驱动 - 使用 taboo() 打包并重定向
-    taboo("org.xerial:sqlite-jdbc:3.46.1.0")
+    // SQLite JDBC 驱动 - 仅保留驱动本体
+    taboo("org.xerial:sqlite-jdbc:3.46.1.0") {
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
 
     // MySQL 预留（启用时取消注释）
     // taboo("com.mysql:mysql-connector-j:8.3.0")

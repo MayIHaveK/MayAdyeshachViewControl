@@ -2,6 +2,7 @@ package com.mayihavek.mayadyeshachviewcontrol
 
 import com.mayihavek.mayadyeshachviewcontrol.config.ConfigManager
 import com.mayihavek.mayadyeshachviewcontrol.interact.InteractSystem
+import com.mayihavek.mayadyeshachviewcontrol.manager.AdyService
 import com.mayihavek.mayadyeshachviewcontrol.manager.NpcVisibilityManager
 import com.mayihavek.mayadyeshachviewcontrol.storage.SqliteVisibilityRepository
 import com.mayihavek.mayadyeshachviewcontrol.utils.ConsoleBanner
@@ -21,6 +22,9 @@ object MayAdyeshachViewControl : Plugin() {
     /** 可见性仓储（SQLite），插件启用时创建，禁用时关闭 */
     private var visibilityRepository: SqliteVisibilityRepository? = null
 
+    val sqliteRepository: SqliteVisibilityRepository?
+        get() = visibilityRepository
+
     // 不要直接在顶层声明具体类型，使用 getter 动态获取
     // 这样只有在实际调用 adyeshachAPI 时，才会触发类加载，完美避开启动器扫描雷区
     val adyeshachAPI: AdyeshachAPI
@@ -30,6 +34,7 @@ object MayAdyeshachViewControl : Plugin() {
         // 初始化数据库
         visibilityRepository = SqliteVisibilityRepository(dataFolder)
         NpcVisibilityManager.init(visibilityRepository!!)
+        AdyService.loadPrivateModels()
 
         // 检测 Adyeshach API
         val adyConnected = try {

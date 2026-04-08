@@ -31,7 +31,7 @@ class SqliteVisibilityRepository(private val dataFolder: File) : VisibilityRepos
             )
             
             transaction(database!!) {
-                SchemaUtils.create(NpcVisibilityTable)
+                SchemaUtils.create(NpcVisibilityTable, PrivateModelTable)
             }
             info("§a[MayAdyeshachViewControl] SQLite 可见性数据库已初始化 (Exposed)")
         } catch (e: Exception) {
@@ -107,6 +107,68 @@ class SqliteVisibilityRepository(private val dataFolder: File) : VisibilityRepos
                 .groupBy { it[NpcVisibilityTable.npcId] }
                 .mapValues { (_, rows) ->
                     rows.associate { it[NpcVisibilityTable.playerName] to it[NpcVisibilityTable.visible] }
+                }
+        } ?: emptyMap()
+    }
+
+    fun setPrivateModel(playerName: String, npcId: String, modelId: String, scale: Double) {
+        withDb {
+            val exists = PrivateModelTable
+                .selectAll()
+                .where { (PrivateModelTable.playerName eq playerName) and (PrivateModelTable.npcId eq npcId) }
+                .count() > 0
+            if (exists) {
+                PrivateModelTable.update(
+                    { (PrivateModelTable.playerName eq playerName) and (PrivateModelTable.npcId eq npcId) }
+                ) {
+                    it[PrivateModelTable.modelId] = modelId
+                    it[PrivateModelTable.scale] = scale
+                }
+            } else {
+                PrivateModelTable.insert {
+                    it[PrivateModelTable.playerName] = playerName
+                    it[PrivateModelTable.npcId] = npcId
+                    it[PrivateModelTable.modelId] = modelId
+                    it[PrivateModelTable.scale] = scale
+                }
+            }
+        }
+    }
+
+    fun removePrivateModel(playerName: String, npcId: String) {
+        withDb {
+            PrivateModelTable.deleteWhere {
+                (PrivateModelTable.playerName eq playerName) and (PrivateModelTable.npcId eq npcId)
+            }
+        }
+    }
+
+    fun removeAllPrivateModelsForNpc(npcId: String): Int {
+        return withDbResult {
+            PrivateModelTable.deleteWhere { PrivateModelTable.npcId eq npcId }
+        } ?: 0
+    }
+
+    fun getPrivateModelsForPlayer(playerName: String): Map<String, Pair<String, Double>> {
+        return withDbResult {
+            PrivateModelTable
+                .selectAll()
+                .where { PrivateModelTable.playerName eq playerName }
+                .associate { row ->
+                    row[PrivateModelTable.npcId] to (row[PrivateModelTable.modelId] to row[PrivateModelTable.scale])
+                }
+        } ?: emptyMap()
+    }
+
+    fun getAllPrivateModels(): Map<String, Map<String, Pair<String, Double>>> {
+        return withDbResult {
+            PrivateModelTable
+                .selectAll()
+                .groupBy { it[PrivateModelTable.playerName] }
+                .mapValues { (_, rows) ->
+                    rows.associate { row ->
+                        row[PrivateModelTable.npcId] to (row[PrivateModelTable.modelId] to row[PrivateModelTable.scale])
+                    }
                 }
         } ?: emptyMap()
     }
