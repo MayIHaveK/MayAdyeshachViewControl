@@ -7,6 +7,8 @@ import ink.ptms.adyeshach.core.Adyeshach
 import ink.ptms.adyeshach.core.entity.EntityInstance
 import ink.ptms.adyeshach.core.entity.manager.ManagerType
 import org.bukkit.Bukkit
+import priv.seventeen.artist.arcartx.event.player.PlayerAreaEnterEvent
+import priv.seventeen.artist.arcartx.event.player.PlayerAreaLeaveEvent
 import org.bukkit.entity.Entity
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Player
@@ -161,35 +163,18 @@ object InteractSystem {
     // ==================== ArcartX 区域事件监听 ====================
 
     /**
-     * 监听 ArcartX 区域进入事件
-     * 通过 TabooLib @SubscribeEvent 监听，事件类型用反射判断避免编译依赖
+     * 监听 ArcartX 区域进入事件。
+     * 这里必须使用具体事件类型，不能写成 Bukkit 基类 Event，
+     * 否则 TabooLib 会尝试注册 org.bukkit.event.Event 本身并在启动时抛错。
      */
     @SubscribeEvent
-    fun onAreaEnter(e: org.bukkit.event.Event) {
-        val clz = e.javaClass
-        if (clz.name != "priv.seventeen.artist.arcartx.event.player.PlayerAreaEnterEvent") return
-        try {
-            val player = clz.getMethod("getPlayer").invoke(e) as? Player ?: return
-            val area = clz.getMethod("getArea").invoke(e) ?: return
-            val areaName = area.javaClass.getMethod("getName").invoke(area) as? String ?: return
-            playerCurrentArea[player.name] = areaName
-        } catch (_: Exception) {}
+    fun onAreaEnter(e: PlayerAreaEnterEvent) {
+        playerCurrentArea[e.player.name] = e.area.name
     }
 
     @SubscribeEvent
-    fun onAreaLeave(e: org.bukkit.event.Event) {
-        val clz = e.javaClass
-        if (clz.name != "priv.seventeen.artist.arcartx.event.player.PlayerAreaLeaveEvent") return
-        try {
-            val player = clz.getMethod("getPlayer").invoke(e) as? Player ?: return
-            val newArea = clz.getMethod("getNewArea").invoke(e)
-            if (newArea == null) {
-                playerCurrentArea[player.name] = null
-            } else {
-                val areaName = newArea.javaClass.getMethod("getName").invoke(newArea) as? String
-                playerCurrentArea[player.name] = areaName
-            }
-        } catch (_: Exception) {}
+    fun onAreaLeave(e: PlayerAreaLeaveEvent) {
+        playerCurrentArea[e.player.name] = e.newArea?.name
     }
 
     // ==================== ArcartX 注册（全反射，避免 Record 编译问题） ====================
