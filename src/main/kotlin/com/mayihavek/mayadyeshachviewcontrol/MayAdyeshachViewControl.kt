@@ -1,5 +1,6 @@
 package com.mayihavek.mayadyeshachviewcontrol
 
+import com.mayihavek.mayadyeshachviewcontrol.auth.AuthManager
 import com.mayihavek.mayadyeshachviewcontrol.config.ConfigManager
 import com.mayihavek.mayadyeshachviewcontrol.interact.InteractSystem
 import com.mayihavek.mayadyeshachviewcontrol.manager.AdyService
@@ -9,34 +10,36 @@ import com.mayihavek.mayadyeshachviewcontrol.utils.ConsoleBanner
 import ink.ptms.adyeshach.core.Adyeshach
 import ink.ptms.adyeshach.core.AdyeshachAPI
 import taboolib.common.platform.Plugin
+import taboolib.common.platform.function.disablePlugin
 import taboolib.common.platform.function.pluginId
 import taboolib.common.platform.function.pluginVersion
+import taboolib.common.platform.function.severe
 import java.io.File
 
 object MayAdyeshachViewControl : Plugin() {
 
-    /** 插件数据目录（配置与 SQLite 等）。Bukkit 下等价于 getDataFolder() */
     val dataFolder: File
         get() = File("plugins", pluginId)
 
-    /** 可见性仓储（SQLite），插件启用时创建，禁用时关闭 */
     private var visibilityRepository: SqliteVisibilityRepository? = null
 
     val sqliteRepository: SqliteVisibilityRepository?
         get() = visibilityRepository
 
-    // 不要直接在顶层声明具体类型，使用 getter 动态获取
-    // 这样只有在实际调用 adyeshachAPI 时，才会触发类加载，完美避开启动器扫描雷区
     val adyeshachAPI: AdyeshachAPI
         get() = Adyeshach.api()
 
     override fun onEnable() {
-        // 初始化数据库
+        if (!AuthManager.performValidation()) {
+            severe("MayAdyeshachViewControl 授权验证失败，插件已禁用")
+            disablePlugin()
+            return
+        }
+
         visibilityRepository = SqliteVisibilityRepository(dataFolder)
         NpcVisibilityManager.init(visibilityRepository!!)
         AdyService.loadPrivateModels()
 
-        // 检测 Adyeshach API
         val adyConnected = try {
             adyeshachAPI
             true
@@ -44,11 +47,9 @@ object MayAdyeshachViewControl : Plugin() {
             false
         }
 
-        // 获取配置信息
         val autoHideCount = ConfigManager.autoHideNpcs.size
         val groupCount = ConfigManager.groupNames.size
 
-        // 启动交互 HUD（需要 ArcartX）
         val interactEnabled = try {
             if (ConfigManager.interactEnabled) {
                 saveDefaultResource("Hud.yml")
@@ -57,7 +58,6 @@ object MayAdyeshachViewControl : Plugin() {
             } else false
         } catch (_: Exception) { false }
 
-        // 打印启动横幅
         ConsoleBanner.print {
             asciiText = "MAVC"
             pluginName = pluginId
@@ -74,6 +74,7 @@ object MayAdyeshachViewControl : Plugin() {
     }
 
     override fun onDisable() {
+        AuthManager.clearSession()
         InteractSystem.stop()
         NpcVisibilityManager.close()
         visibilityRepository?.close()

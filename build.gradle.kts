@@ -9,6 +9,7 @@ plugins {
     java
     id("io.izzel.taboolib") version "2.0.27"
     id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("com.mayiahvek.obfuscate")
 }
 
 taboolib {
@@ -90,4 +91,49 @@ tasks.withType<KotlinCompile> {
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+// ===== MayObfuscate 混淆配置 =====
+obfuscate {
+    inPlaceOverwrite.set(true)
+
+    stringEncryption.set(true)
+    stringEncryptionKey.set("MayAdyeshachViewControl-StringObf-Key-2026!")
+    stringEncryptionStrength.set("light")
+
+    controlFlowObfuscation.set(true)
+    controlFlowStrength.set("light")
+
+    renameClasses.set(false)
+    renameMethods.set(false)
+    renameFields.set(false)
+
+    junkClasses.set(true)
+    junkClassCount.set(1500)
+
+    removeLineNumbers.set(true)
+    removeLocalVariables.set(true)
+    removeSourceFile.set(true)
+
+    excludeClasses.set(listOf(
+        "taboolib.**",
+        "io.izzel.**",
+        "kotlin.**",
+        "kotlinx.**",
+        "org.jetbrains.**",
+        "org.intellij.**",
+        "ink.ptms.**"
+    ))
+
+    keepClassNames.set(listOf(
+        "com.mayihavek.mayadyeshachviewcontrol.MayAdyeshachViewControl"
+    ))
+
+    mappingFile.set("build/obfuscate-mapping.txt")
+
+    finalObfuscation.set(false)
+}
+
+tasks.named("jar") {
+    dependsOn("obfuscateClasses")
 }
